@@ -1,0 +1,123 @@
+usertype Message;  
+usertype operations; 
+usertype Acknowledgment; 
+
+//http://www.steves-internet-guide.com/understanding-mqtt-qos-2/
+//https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels
+protocol MQTT-Multi-Publishers(X, Y, S, Sub1 , Sub2) {      
+
+	role X  {
+			
+			const    mx:   Nonce;
+		
+			fresh PUBREC  : operations;
+			fresh PUBREL  : operations;
+			fresh ack  : Acknowledgment;
+			var PUBCOMP  : operations;
+
+			send_1(X, S, { mx, X}k(S) );
+			recv_4 (S, X, {PUBREC, S}k(S));
+			send_6(X, S, {PUBREL}k(S));
+			recv_10(S,X, {PUBCOMP,ack}k(S));
+
+			claim_a1(X, Secret,mx);
+			claim_a2(X,Weakagree);
+			claim_r3(X,Niagree);
+			claim_r4(X,Nisynch);
+
+			}
+	
+	role Y  {
+			
+			const    my:   Nonce;
+		
+			fresh PUBREC  : operations;
+			fresh PUBREL  : operations;
+			fresh ack  : Acknowledgment;
+			var PUBCOMP  : operations;
+
+			send_2(Y, S, { my, Y}k(S) );
+			recv_5 (S, Y, {PUBREC, S}k(S));
+			send_7(Y, S, {PUBREL}k(S));
+			recv_11(S,Y, {PUBCOMP,ack}k(S));
+
+
+			claim_a1(Y, Secret,my);
+			claim_a2(Y,Weakagree);
+			claim_r3(Y,Niagree);
+			claim_r4(Y,Nisynch);
+
+			}
+
+
+	role S  {
+
+			var mx , my :   Nonce;
+			
+			fresh ack  : Acknowledgment;
+			fresh PUBREC  : operations;
+			fresh PUBREL  : operations;
+			fresh PUBCOMP  : operations;
+			fresh PUBCOMP  : operations;
+
+
+			read_1(X, S, { mx, X}k(S) );
+			read_2(Y, S, { my, Y}k(S) );
+
+			send_3(S, Sub1, X, Y, my, mx);
+			
+			send_12(S, Sub2, X, Y, my, mx);
+
+			
+			send_4 (S, X, {PUBREC, S}k(S));
+			send_5(S, Y, {PUBREC, S}k(S));
+			recv_6(X, S, {PUBREL}k(S));
+			recv_7(Y, S, {PUBREL}k(S));
+
+
+			send_8(S, Sub1, {X, S, mx}k(Sub1));
+			send_9(S, Sub1, {Y, S, my}k(Sub1));
+
+			send_13(S, Sub2, {X, S, mx}k(Sub2));
+			send_14(S, Sub2, {Y, S, my}k(Sub2));
+
+			send_10(S,X, {PUBCOMP,ack}k(S));
+			send_11(S,Y, {PUBCOMP,ack}k(S));
+
+
+			}
+
+	role Sub1  {
+
+			var mx , my :   Nonce;
+			var ack  : Acknowledgment;
+			var PUBREC  : operations;
+			var PUBREL  : operations;
+			var PUBCOMP  : operations;
+
+			recv_3(S, Sub1, X, Y, my, mx);
+
+			recv_8(S, Sub1, {X, S, mx}k(Sub1));
+			recv_9(S, Sub1, {Y, S, my}k(Sub1));
+
+
+			}
+
+	role Sub2 {
+
+			var mx , my :   Nonce;
+			var ack  : Acknowledgment;
+			var PUBREC  : operations;
+			var PUBREL  : operations;
+			var PUBCOMP  : operations;
+
+			recv_12(S, Sub2, X, Y, my, mx);
+
+			recv_13(S, Sub2, {X, S, mx}k(Sub2));
+			recv_14(S, Sub2, {Y, S, my}k(Sub2));
+
+
+			}
+
+}
+
